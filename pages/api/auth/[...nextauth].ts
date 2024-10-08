@@ -26,9 +26,8 @@ export default NextAuth({
   ],
   callbacks: {
     async session({ session, token }) {
-      // Ensure session.user is defined before trying to assign the id
       if (session.user) {
-        session.user.id = token.sub!; // Use non-null assertion since token.sub should exist
+        session.user.id = token.sub!;
       }
       return session;
     },
