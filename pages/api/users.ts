@@ -1,11 +1,9 @@
-// pages/api/users.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import pool from '../../lib/db'; // Adjust the path if needed
+import pool from '../../lib/db';
 
-// Create or get user
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === 'POST') {
-    const { email, name, firstName, lastName, dateOfBirth, address, phoneNumber } = req.body;
+    const { firstName, lastName, email } = req.body;
 
     try {
       // Check if the user already exists
@@ -17,15 +15,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       // If user doesn't exist, insert new user
       const [result]: any = await pool.query(
-        'INSERT INTO users (nom, prenom, dateDeNaissance, adresse, NumeroDeTelephone, email) VALUES (?, ?, ?, ?, ?, ?)',
-        [lastName, firstName, dateOfBirth, address, phoneNumber, email]
+        'INSERT INTO users (nom, prenom, email) VALUES (?, ?, ?)',
+        [lastName || 'Unknown', firstName || 'Unknown', email] // Default values if undefined
       );
 
-      const insertId = result.insertId; // Access insertId directly
+      const insertId = result.insertId;
 
       return res.status(201).json({ message: 'User created', userId: insertId });
     } catch (error) {
-      console.error('Database error:', error); // Log any errors to the console
+      console.error('Database error:', error);
       res.status(500).json({ message: 'Internal Server Error' });
     }
   } else {

@@ -1,19 +1,26 @@
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { validateAddress } from "./api/validateAddress"; // Ensure this path is correct
 import Link from "next/link";
 
 const Dashboard = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession(); // Get session and status from useSession
+  const router = useRouter();
   const [isInZone, setIsInZone] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [newAddress, setNewAddress] = useState<string | null>(null);
 
   useEffect(() => {
-    if (session) {
+    // Redirect to sign-in page if not authenticated
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
+
+    if (status === "authenticated") {
       getUserLocation();
     }
-  }, [session]);
+  }, [status, session]);
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -39,13 +46,13 @@ const Dashboard = () => {
   const validateUserAddress = async (address: string) => {
     try {
       console.log("Validating address:", address); // Debug: log the address
-      const isValid = await validateAddress(address); // Appel à la fonction de validation de l'adresse
+      const isValid = await validateAddress(address); // Call the function to validate the address
       console.log("Validation result:", isValid); // Debug: log the result
       setIsInZone(isValid);
     } catch (error) {
       console.error("Error validating address:", error);
     }
-  };  
+  };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewAddress(e.target.value);
@@ -63,12 +70,18 @@ const Dashboard = () => {
     }
   };
 
-  if (!session) return <p>Access Denied</p>;
+  if (status === "loading") {
+    return <p>Loading...</p>; // Show a loading state while session is being fetched
+  }
+
+  if (status === "unauthenticated") {
+    return <p>Access Denied</p>; // Show access denied if user is not authenticated
+  }
 
   return (
     <div>
       <h1>Dashboard</h1>
-      <p>Welcome, {session.user?.name}</p>
+      <p>Welcome, {session?.user?.name || session?.user?.email}</p>
 
       {/* Sign out button with callback to redirect to sign-in page */}
       <button onClick={() => signOut({ callbackUrl: "/signin" })}>Sign out</button>

@@ -1,22 +1,13 @@
-// pages/api/auth/[...nextauth].ts (or your sign-in logic)
+// pages/api/auth/[...nextauth].ts
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import axios from 'axios'; // You might need to install axios
+import pool from '../../../lib/db'; // Adjust the path based on your folder structure
+import { RowDataPacket } from 'mysql2';
+import { JWT } from 'next-auth/jwt';
 
-
-declare module "next-auth" {
-  interface User {
-    id: string;            // Ensure id is included
-    firstName?: string;   // Optional first name
-    lastName?: string;    // Optional last name
-    dateOfBirth?: string; // Optional date of birth
-    address?: string;     // Optional address
-    phoneNumber?: string; // Optional phone number
-  }
-
-  interface Session {
-    user: User;          // User object now includes all specified fields
-  }
+interface CustomJWT extends JWT {
+  firstName?: string;
+  lastName?: string;
 }
 
 export default NextAuth({
@@ -24,31 +15,52 @@ export default NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "openid email profile",
+        },
+      },
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // This is where you'll handle saving the user info to your database
-      try {
-        const response = await axios.post('/api/users', {
-          email: user.email,
-          firstName: user.given_name,
-          lastName: user.family_name,
-          dateOfBirth: '', // Add if available
-          address: '', // Add if available
-          phoneNumber: '', // Add if available
-        });
+    async jwt({ token, user }) {
+      if (user) {
+        const nameParts = user.name?.split(" ") || ["", ""];
 
-        console.log(response.data); // Log the response from your API
-        return true; // Return true to allow sign in
-      } catch (error) {
-        console.error('Error saving user:', error);
-        return false; // Return false to deny sign in
+        (token as CustomJWT).firstName = nameParts[0] || "";
+        (token as CustomJWT).lastName = nameParts.slice(1).join(" ") || "";
+        (token as CustomJWT).email = user.email || "";
+
+        const connection = await pool.getConnection();
+        try {
+          const [rows] = await connection.query<RowDataPacket[]>('SELECT * FROM users WHERE email = ?', [user.email]);
+
+          if (rows.length === 0) {
+            await connection.query(
+              'INSERT INTO users (nom, prenom, email) VALUES (?, ?, ?)',
+              [(token as CustomJWT).firstName, (token as CustomJWT).lastName, user.email]
+            );
+          }
+        } catch (error) {
+          console.error('Database query error:', error);
+        } finally {
+          connection.release();
+        }
       }
+      return token as CustomJWT;
     },
-    async session({ session, user }) {
-      // Here you can attach user data to the session
+    async session({ session, token }) {
+      if (token) {
+        const customToken = token as CustomJWT; // Type assertion here
+        session.user = {
+          ...session.user,
+          firstName: customToken.firstName || "", // Use default value if undefined
+          lastName: customToken.lastName || "",   // Use default value if undefined
+          email: customToken.email || "",         // Email should always be present
+        };
+      }
       return session;
     },
   },
+  debug: process.env.NODE_ENV === 'development',
 });
