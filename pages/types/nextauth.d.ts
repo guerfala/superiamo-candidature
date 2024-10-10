@@ -6,6 +6,9 @@ declare module 'next-auth' {
     email: string;
     firstName?: string; // Optional because it may not be present
     lastName?: string;  // Optional because it may not be present
+    dateDeNaissance?: string; // Use Date type if you want
+    adresse?: string;
+    numeroDeTelephone?: string;
   }
 
   interface Session {

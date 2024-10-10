@@ -79,37 +79,129 @@ const Dashboard = () => {
   }
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome, {session?.user?.name || session?.user?.email}</p>
+    <div style={styles.container}>
+      <div style={styles.buttonContainer}>
+        {/* Sign out button with callback to redirect to sign-in page */}
+        <button style={styles.signOutButton} onClick={() => signOut({ callbackUrl: "/signin" })}>
+          Sign out
+        </button>
 
-      {/* Sign out button with callback to redirect to sign-in page */}
-      <button onClick={() => signOut({ callbackUrl: "/signin" })}>Sign out</button>
+        {/* Button to navigate to Profile page */}
+        <Link href="/profile">
+          <button style={styles.profileButton}>Go to Profile</button>
+        </Link>
+      </div>
 
-      {/* Button to navigate to Profile page */}
-      <Link href="/profile">
-        <button>Go to Profile</button>
-      </Link>
+      <h1 style={styles.title}>Dashboard</h1>
+      <p style={styles.welcomeText}>Welcome, {session?.user?.name || session?.user?.email}</p>
 
       {/* Address confirmation form */}
       {address && (
-        <form onSubmit={handleAddressConfirm}>
-          <label>
+        <form onSubmit={handleAddressConfirm} style={styles.form}>
+          <label style={styles.label}>
             Your address:
-            <input type="text" value={newAddress || address} onChange={handleAddressChange} />
+            <input 
+              type="text" 
+              value={newAddress || address} 
+              onChange={handleAddressChange} 
+              style={styles.input} 
+            />
           </label>
-          <button type="submit">Confirm Address</button>
+          <button type="submit" style={styles.confirmButton}>Confirm Address</button>
         </form>
       )}
 
       {/* Show Zone Information */}
       {isInZone !== null ? (
-        <p>{isInZone ? "You are in the zone of Paris" : "You are not in the zone"}</p>
+        <p style={{ ...styles.zoneInfo, color: isInZone ? "green" : "red" }}>
+          {isInZone ? "You are in the zone (50Km of Paris)" : "You are not in the zone (50Km of Paris)"}
+        </p>
       ) : (
         <p>Loading zone information...</p>
       )}
     </div>
   );
+};
+
+// Styles for the components
+const styles: { [key: string]: React.CSSProperties } = {
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100vh",
+    backgroundColor: "#f4f4f4",
+    padding: "2rem",
+    borderRadius: "8px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    position: "relative",
+  },
+  buttonContainer: {
+    position: "absolute",
+    top: "1rem",
+    right: "1rem",
+    display: "flex",
+    gap: "1rem",
+  },
+  title: {
+    fontSize: "2.5rem",
+    fontWeight: "bold",
+    marginBottom: "1rem",
+  },
+  welcomeText: {
+    fontSize: "1.2rem",
+    marginBottom: "2rem",
+  },
+  signOutButton: {
+    padding: "0.5rem 1rem",
+    fontSize: "1rem",
+    color: "#fff",
+    backgroundColor: "#ff5252",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  profileButton: {
+    padding: "0.5rem 1rem",
+    fontSize: "1rem",
+    color: "#fff",
+    backgroundColor: "#4285F4",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: "2rem",
+  },
+  label: {
+    marginBottom: "0.5rem",
+    fontSize: "1rem",
+  },
+  input: {
+    padding: "0.5rem",
+    borderRadius: "5px",
+    border: "1px solid #ccc",
+    marginBottom: "1rem",
+    width: "600px",
+    marginLeft: "10px"
+  },
+  confirmButton: {
+    padding: "0.5rem 1rem",
+    fontSize: "1rem",
+    color: "#fff",
+    backgroundColor: "#34A853",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  zoneInfo: {
+    fontSize: "2rem",
+    marginTop: "1rem",
+  },
 };
 
 export default Dashboard;
