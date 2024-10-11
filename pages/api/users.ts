@@ -1,34 +1,35 @@
+// pages/api/users.ts
 import { NextApiRequest, NextApiResponse } from 'next';
-import pool from '../../lib/db';
+import pool from '../../lib/db'; // Adjust the path based on your folder structure
+import { verify } from 'jsonwebtoken';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method === 'POST') {
-    const { firstName, lastName, email } = req.body;
+  if (req.method === 'PUT') {
+    const { id, firstName, lastName, dateDeNaissance, adresse, numeroDeTelephone, email } = req.body;
+
+    // Optionally verify the token here
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Unauthorized' });
 
     try {
-      // Check if the user already exists
-      const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      // Verify the token (if needed)
+      // const decoded = verify(token, process.env.JWT_SECRET); // If using JWT verification
 
-      if (rows.length > 0) {
-        return res.status(200).json({ message: 'User already exists' });
-      }
-
-      // If user doesn't exist, insert new user
-      const [result]: any = await pool.query(
-        'INSERT INTO users (nom, prenom, email) VALUES (?, ?, ?)',
-        [lastName || 'Unknown', firstName || 'Unknown', email] // Default values if undefined
+      const connection = await pool.getConnection();
+      await connection.query(
+        'UPDATE users SET nom = ?, prenom = ?, dateDeNaissance = ?, adresse = ?, NumeroDeTelephone = ? WHERE id = ?',
+        [lastName, firstName, dateDeNaissance, adresse, numeroDeTelephone, id]
       );
 
-      const insertId = result.insertId;
-
-      return res.status(201).json({ message: 'User created', userId: insertId });
+      connection.release();
+      return res.status(200).json({ message: 'User updated successfully' });
     } catch (error) {
-      console.error('Database error:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
+      console.error('Database update error:', error);
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['PUT']);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 };
 

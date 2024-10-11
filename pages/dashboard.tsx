@@ -67,6 +67,26 @@ const Dashboard = () => {
 
       // Validate the user address again after confirming
       validateUserAddress(newAddress);
+
+      // Save the address to the database
+      try {
+        const response = await fetch('/api/saveAddress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address: newAddress }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save address');
+        }
+
+        const data = await response.json();
+        console.log(data.message); // Optional: Display success message
+      } catch (error) {
+        console.error("Error saving address:", error);
+      }
     }
   };
 

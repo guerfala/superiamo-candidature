@@ -5,22 +5,24 @@ import { useState, useEffect } from 'react';
 const Profile = () => {
   const { data: session } = useSession();
   const [isEditing, setIsEditing] = useState(false);
-  const [nom, setNom] = useState(session?.user.lastName || ''); // Adjusted to use 'nom'
-  const [prenom, setPrenom] = useState(session?.user.firstName || ''); // Adjusted to use 'prenom'
-  const [dateDeNaissance, setDateDeNaissance] = useState(session?.user.dateDeNaissance || '');
-  const [adresse, setAdresse] = useState(session?.user.adresse || '');
-  const [numeroDeTelephone, setNumeroDeTelephone] = useState(session?.user.numeroDeTelephone || '');
-  const [email, setEmail] = useState(session?.user.email || ''); // New state for email
+  const [nom, setNom] = useState('');
+  const [prenom, setPrenom] = useState('');
+  const [dateDeNaissance, setDateDeNaissance] = useState('');
+  const [adresse, setAdresse] = useState('');
+  const [numeroDeTelephone, setNumeroDeTelephone] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    console.log(session);
     if (session) {
-      // Set initial values when the session changes
-      setNom(session.user.lastName!);
-      setPrenom(session.user.firstName!);
-      setDateDeNaissance(session.user.dateDeNaissance!);
-      setAdresse(session.user.adresse!);
-      setNumeroDeTelephone(session.user.numeroDeTelephone!);
-      setEmail(session.user.email); // Set email when session updates
+      setNom(session.user.lastName || '');
+      setPrenom(session.user.firstName || '');
+      setDateDeNaissance(session.user.dateDeNaissance || '');
+      setAdresse(session.user.adresse || '');
+      setNumeroDeTelephone(session.user.numeroDeTelephone || '');
+      setEmail(session.user.email || '');
     }
   }, [session]);
 
@@ -28,17 +30,61 @@ const Profile = () => {
     setIsEditing(!isEditing);
   };
 
-  const handleSave = () => {
-    // Here you can add a function to save the edited information to your database.
-    console.log("Saving new info:", { nom, prenom, dateDeNaissance, adresse, numeroDeTelephone, email });
-    setIsEditing(false);
-  };
+  const handleSave = async () => {
+    // Ensure session and access token are available
+    if (!session || !session.user.accessToken) {
+      console.error('No access token found');
+      setErrorMessage('Access token is missing.');
+      return;
+    }
+  
+    // Prepare the updated profile data
+    const updatedProfile = {
+      id: session.user.id, // Use the user ID from the session
+      firstName: prenom,
+      lastName: nom,
+      dateDeNaissance,
+      adresse,
+      numeroDeTelephone,
+      email: session.user.email, // Assuming email is stored in the session
+    };
+  
+    setLoading(true);
+    setErrorMessage('');
+  
+    try {
+      const response = await fetch('./api/users', {
+        method: 'PUT', // Change to PUT for updating user data
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.user.accessToken}`, // Add the authorization token here
+        },
+        body: JSON.stringify(updatedProfile), // Send updated profile
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('Profile updated successfully');
+        setIsEditing(false);
+      } else {
+        console.error('Error:', data.message);
+        setErrorMessage(data.message || 'Failed to update profile.'); // Display error message
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setErrorMessage('An error occurred while saving the profile.');
+    } finally {
+      setLoading(false);
+    }
+  };  
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Profile</h1>
       {session ? (
         <div style={styles.infoContainer}>
+          {errorMessage && <p style={styles.errorText}>{errorMessage}</p>}
           <p style={styles.infoText}><strong>Email:</strong> {isEditing ? (
             <input
               style={styles.input}
@@ -117,7 +163,9 @@ const Profile = () => {
           <div style={styles.buttonContainer}>
             {isEditing ? (
               <>
-                <button style={styles.saveButton} onClick={handleSave}>Save</button>
+                <button style={styles.saveButton} onClick={handleSave} disabled={loading}>
+                  {loading ? 'Saving...' : 'Save'}
+                </button>
                 <button style={styles.cancelButton} onClick={handleEditToggle}>Cancel</button>
               </>
             ) : (
@@ -161,67 +209,69 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: "400px",
     textAlign: "left",
   },
-  infoText: {
-    fontSize: "1rem",
-    margin: "0.5rem 0",
-  },
   inputContainer: {
-    margin: "1rem 0",
+    marginBottom: "1rem",
   },
   label: {
-    fontSize: "1rem",
+    fontWeight: "bold",
+    display: "block",
     marginBottom: "0.5rem",
   },
   input: {
     width: "100%",
     padding: "0.5rem",
+    fontSize: "1rem",
     border: "1px solid #ccc",
     borderRadius: "4px",
   },
+  infoText: {
+    fontSize: "1rem",
+    marginBottom: "0.5rem",
+  },
   buttonContainer: {
-    marginTop: "1rem",
     display: "flex",
     justifyContent: "space-between",
+    marginTop: "1.5rem",
   },
   editButton: {
-    padding: "0.5rem 1rem",
-    fontSize: "1rem",
+    backgroundColor: "#0070f3",
     color: "#fff",
-    backgroundColor: "#4285F4",
-    border: "none",
-    borderRadius: "5px",
+    padding: "0.75rem 1.5rem",
+    borderRadius: "4px",
     cursor: "pointer",
+    border: "none",
   },
   saveButton: {
-    padding: "0.5rem 1rem",
-    fontSize: "1rem",
+    backgroundColor: "#28a745",
     color: "#fff",
-    backgroundColor: "#4CAF50",
-    border: "none",
-    borderRadius: "5px",
+    padding: "0.75rem 1.5rem",
+    borderRadius: "4px",
     cursor: "pointer",
+    border: "none",
   },
   cancelButton: {
-    padding: "0.5rem 1rem",
-    fontSize: "1rem",
+    backgroundColor: "#dc3545",
     color: "#fff",
-    backgroundColor: "#ff9800",
-    border: "none",
-    borderRadius: "5px",
+    padding: "0.75rem 1.5rem",
+    borderRadius: "4px",
     cursor: "pointer",
+    border: "none",
   },
   logoutButton: {
-    padding: "0.5rem 1rem",
-    fontSize: "1rem",
+    backgroundColor: "#ff5a5f",
     color: "#fff",
-    backgroundColor: "#ff5252",
-    border: "none",
-    borderRadius: "5px",
+    padding: "0.75rem 1.5rem",
+    borderRadius: "4px",
     cursor: "pointer",
+    border: "none",
   },
   notLoggedInText: {
-    fontSize: "1rem",
-    color: "#ff5252",
+    fontSize: "1.25rem",
+    color: "#ff5a5f",
+  },
+  errorText: {
+    color: "#dc3545",
+    marginBottom: "1rem",
   },
 };
 

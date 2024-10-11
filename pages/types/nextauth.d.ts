@@ -9,6 +9,7 @@ declare module 'next-auth' {
     dateDeNaissance?: string; // Use Date type if you want
     adresse?: string;
     numeroDeTelephone?: string;
+    accessToken?: string; // Add the accessToken property
   }
 
   interface Session {
