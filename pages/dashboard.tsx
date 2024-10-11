@@ -1,3 +1,4 @@
+// Dashboard.tsx
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
@@ -9,7 +10,7 @@ const Dashboard = () => {
   const router = useRouter();
   const [isInZone, setIsInZone] = useState<boolean | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [newAddress, setNewAddress] = useState<string | null>(null);
+  const [newAddress, setNewAddress] = useState<string>(""); // State for new address input
 
   useEffect(() => {
     // Redirect to sign-in page if not authenticated
@@ -18,17 +19,26 @@ const Dashboard = () => {
     }
 
     if (status === "authenticated") {
-      getUserLocation();
+      // Once authenticated, fetch the user's location
+      getUserLocationAndUpdateDatabase(); // Automatically save address after sign-in
     }
   }, [status, session]);
 
-  const getUserLocation = () => {
+  const getUserLocationAndUpdateDatabase = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;
+
+        // Reverse geocode to get human-readable address
         const address = await reverseGeocode(latitude, longitude);
-        setAddress(address);
-        validateUserAddress(address); // Trigger address validation
+        setAddress(address); // Update the displayed address
+        setNewAddress(address); // Set the new address input with the detected address
+
+        // Save the address to the database immediately
+        await saveAddressToDatabase(address);
+
+        // Validate if the address is within the 50km zone
+        validateUserAddress(address);
       }, (error) => {
         console.error("Error retrieving location:", error);
       });
@@ -54,39 +64,32 @@ const Dashboard = () => {
     }
   };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewAddress(e.target.value);
+  const saveAddressToDatabase = async (address: string) => {
+    try {
+      const response = await fetch('/api/saveAddress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user?.email}`, // Pass the user's email in the headers
+        },
+        body: JSON.stringify({ address }), // Send detected address to API
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save address');
+      }
+
+      console.log('Address saved successfully.');
+    } catch (error) {
+      console.error("Error saving address:", error);
+    }
   };
 
-  const handleAddressConfirm = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleChangeAddress = async () => {
     if (newAddress) {
-      const isValid = await validateAddress(newAddress);
-      setIsInZone(isValid); // Check if the new address is in the zone
-      setAddress(newAddress); // Update the displayed address
-
-      // Validate the user address again after confirming
-      validateUserAddress(newAddress);
-
-      // Save the address to the database
-      try {
-        const response = await fetch('/api/saveAddress', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ address: newAddress }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save address');
-        }
-
-        const data = await response.json();
-        console.log(data.message); // Optional: Display success message
-      } catch (error) {
-        console.error("Error saving address:", error);
-      }
+      await saveAddressToDatabase(newAddress);
+      setAddress(newAddress); // Update displayed address with new address
+      validateUserAddress(newAddress); // Validate the new address
     }
   };
 
@@ -115,21 +118,22 @@ const Dashboard = () => {
       <h1 style={styles.title}>Dashboard</h1>
       <p style={styles.welcomeText}>Welcome, {session?.user?.name || session?.user?.email}</p>
 
-      {/* Address confirmation form */}
+      {/* Address display */}
       {address && (
-        <form onSubmit={handleAddressConfirm} style={styles.form}>
-          <label style={styles.label}>
-            Your address:
-            <input 
-              type="text" 
-              value={newAddress || address} 
-              onChange={handleAddressChange} 
-              style={styles.input} 
-            />
-          </label>
-          <button type="submit" style={styles.confirmButton}>Confirm Address</button>
-        </form>
+        <p>Your detected address: {address}</p>
       )}
+
+      {/* Address input and button to change address */}
+      <input
+        type="text"
+        value={newAddress}
+        onChange={(e) => setNewAddress(e.target.value)}
+        placeholder="Change your address"
+        style={styles.addressInput}
+      />
+      <button style={styles.changeAddressButton} onClick={handleChangeAddress}>
+        Change Address
+      </button>
 
       {/* Show Zone Information */}
       {isInZone !== null ? (
@@ -191,29 +195,19 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: "5px",
     cursor: "pointer",
   },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    marginBottom: "2rem",
-  },
-  label: {
-    marginBottom: "0.5rem",
-    fontSize: "1rem",
-  },
-  input: {
+  addressInput: {
     padding: "0.5rem",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
+    fontSize: "1rem",
+    width: "300px",
     marginBottom: "1rem",
-    width: "600px",
-    marginLeft: "10px"
+    border: "1px solid #ccc",
+    borderRadius: "4px",
   },
-  confirmButton: {
+  changeAddressButton: {
     padding: "0.5rem 1rem",
     fontSize: "1rem",
     color: "#fff",
-    backgroundColor: "#34A853",
+    backgroundColor: "#4CAF50",
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",

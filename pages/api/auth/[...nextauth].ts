@@ -5,6 +5,7 @@ import pool from '../../../lib/db'; // Adjust the path based on your folder stru
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise'; // Import types correctly
 import { JWT } from 'next-auth/jwt';
 
+// Extend the JWT interface to include custom fields
 interface CustomJWT extends JWT {
   userId?: number; // Add userId to the JWT interface
   firstName?: string;
@@ -28,7 +29,6 @@ export default NextAuth({
     async jwt({ token, user, account }) {
       if (user) {
         const nameParts = user.name?.split(" ") || ["", ""];
-
         (token as CustomJWT).firstName = nameParts[0] || "";
         (token as CustomJWT).lastName = nameParts.slice(1).join(" ") || "";
         (token as CustomJWT).email = user.email || "";
