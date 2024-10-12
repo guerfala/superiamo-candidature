@@ -22,7 +22,39 @@ const Dashboard = () => {
       // Once authenticated, fetch the user's location
       getUserLocationAndUpdateDatabase(); // Automatically save address after sign-in
     }
-  }, [status, session]);
+  }, [status, router]); // Removed session from dependencies
+
+  useEffect(() => {
+    // Save user info only once when the component mounts
+    if (status === "authenticated") {
+      saveUserInfo(); // Save user info after successful sign-in
+    }
+  }, [status]); // Only dependent on status
+
+  const saveUserInfo = async () => {
+    if (session?.user) {
+      const { name, email } = session.user; // Get user name and email from session
+      const [prenom, nom] = name?.split(' ') || ['Unknown', 'Unknown']; // Split name into first and last name
+
+      try {
+        const response = await fetch('/api/saveUser', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ nom, prenom, email }), // Send user data to API
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save user information');
+        }
+
+        console.log('User information saved successfully.');
+      } catch (error) {
+        console.error("Error saving user information:", error);
+      }
+    }
+  };
 
   const getUserLocationAndUpdateDatabase = async () => {
     if (navigator.geolocation) {

@@ -1,6 +1,7 @@
 // pages/profile.tsx
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
+import Link from 'next/link'; // Import Link
 
 const Profile = () => {
   const { data: session } = useSession();
@@ -15,15 +16,34 @@ const Profile = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    console.log(session);
-    if (session) {
-      setNom(session.user.lastName || '');
-      setPrenom(session.user.firstName || '');
-      setDateDeNaissance(session.user.dateDeNaissance || '');
-      setAdresse(session.user.adresse || '');
-      setNumeroDeTelephone(session.user.numeroDeTelephone || '');
-      setEmail(session.user.email || '');
-    }
+    const fetchUserData = async () => {
+      if (session) {
+        try {
+          const response = await fetch(`/api/users/${session.user.id}`, {
+            headers: {
+              'Authorization': `Bearer ${session.user.accessToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch user data');
+          }
+
+          const userData = await response.json();
+          setNom(userData.nom);
+          setPrenom(userData.prenom);
+          setDateDeNaissance(userData.dateDeNaissance);
+          setAdresse(userData.adresse);
+          setNumeroDeTelephone(userData.NumeroDeTelephone);
+          setEmail(userData.email);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setErrorMessage('Failed to load user data.');
+        }
+      }
+    };
+
+    fetchUserData();
   }, [session]);
 
   const handleEditToggle = () => {
@@ -31,45 +51,42 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    // Ensure session and access token are available
     if (!session || !session.user.accessToken) {
       console.error('No access token found');
       setErrorMessage('Access token is missing.');
       return;
     }
-  
-    // Prepare the updated profile data
+
     const updatedProfile = {
-      id: session.user.id, // Use the user ID from the session
-      firstName: prenom,
-      lastName: nom,
+      nom,
+      prenom,
       dateDeNaissance,
       adresse,
       numeroDeTelephone,
-      email: session.user.email, // Assuming email is stored in the session
+      email: session.user.email, // Use the session email
     };
-  
+
     setLoading(true);
     setErrorMessage('');
-  
+
     try {
-      const response = await fetch('./api/users', {
-        method: 'PUT', // Change to PUT for updating user data
+      const response = await fetch(`/api/users/${session.user.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.user.accessToken}`, // Add the authorization token here
+          'Authorization': `Bearer ${session.user.accessToken}`,
         },
-        body: JSON.stringify(updatedProfile), // Send updated profile
+        body: JSON.stringify(updatedProfile),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         console.log('Profile updated successfully');
         setIsEditing(false);
       } else {
         console.error('Error:', data.message);
-        setErrorMessage(data.message || 'Failed to update profile.'); // Display error message
+        setErrorMessage(data.message || 'Failed to update profile.');
       }
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -77,7 +94,7 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
   return (
     <div style={styles.container}>
@@ -93,7 +110,7 @@ const Profile = () => {
               onChange={(e) => setEmail(e.target.value)}
             />
           ) : (
-            session.user.email
+            email
           )}</p>
           <div style={styles.inputContainer}>
             <label style={styles.label}>Nom:</label>
@@ -175,6 +192,12 @@ const Profile = () => {
               </>
             )}
           </div>
+
+          {/* Button to go back to Dashboard */}
+          <Link href="/dashboard">
+            <button style={styles.dashboardButton}>Go to Dashboard</button>
+          </Link>
+
         </div>
       ) : (
         <p style={styles.notLoggedInText}>You are not logged in.</p>
@@ -256,22 +279,30 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: "4px",
     cursor: "pointer",
     border: "none",
+    marginLeft: "0.5rem",
   },
   logoutButton: {
-    backgroundColor: "#ff5a5f",
+    backgroundColor: "#ff5722",
     color: "#fff",
     padding: "0.75rem 1.5rem",
     borderRadius: "4px",
     cursor: "pointer",
     border: "none",
   },
+  dashboardButton: {
+    backgroundColor: "#0070f3",
+    color: "#fff",
+    padding: "0.75rem 1.5rem",
+    borderRadius: "4px",
+    cursor: "pointer",
+    border: "none",
+    marginTop: "1rem",
+  },
   notLoggedInText: {
-    fontSize: "1.25rem",
-    color: "#ff5a5f",
+    color: "#ff5722",
   },
   errorText: {
     color: "#dc3545",
-    marginBottom: "1rem",
   },
 };
 
