@@ -39,6 +39,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         'UPDATE users SET nom = ?, prenom = ?, dateDeNaissance = ?, adresse = ?, NumeroDeTelephone = ? WHERE id = ?',
         [nom, prenom, dateDeNaissance, adresse, numeroDeTelephone, id]
       );
+      console.log(result);
 
       connection.release();
       return res.status(200).json({ message: 'User updated successfully' });
