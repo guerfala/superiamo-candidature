@@ -3,6 +3,7 @@ import { SessionProvider } from "next-auth/react";
 import { AppProps } from "next/app";
 import Head from "next/head";
 import "../styles/globals.css"; // Include any global styles if you have
+import Link from "next/link";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -22,9 +23,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
       <header id="header" className="header d-flex align-items-center sticky-top">
         <div className="container-fluid container-xl position-relative d-flex align-items-center">
-          <a href="/" className="logo d-flex align-items-center me-auto">
+        <Link href="/" className="logo d-flex align-items-center me-auto">
             <h1 className="sitename">Supriamo</h1>
-          </a>
+        </Link>
           
         </div>
       </header>
