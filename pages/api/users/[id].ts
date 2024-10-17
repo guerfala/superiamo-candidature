@@ -1,7 +1,5 @@
-// pages/api/users/[id].ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import pool from '../../../lib/db'; // Adjust the path based on your folder structure
-import { verify } from 'jsonwebtoken';
 import { RowDataPacket } from 'mysql2'; // Import RowDataPacket for typing
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {

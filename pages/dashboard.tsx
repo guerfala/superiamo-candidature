@@ -1,4 +1,3 @@
-// Dashboard.tsx
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";

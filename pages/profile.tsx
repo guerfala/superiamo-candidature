@@ -1,4 +1,3 @@
-// pages/profile.tsx
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link'; // Import Link

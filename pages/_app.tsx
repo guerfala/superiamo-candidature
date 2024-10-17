@@ -1,9 +1,16 @@
-// pages/_app.tsx
 import { SessionProvider } from "next-auth/react";
 import { AppProps } from "next/app";
 import Head from "next/head";
 import "../styles/globals.css"; // Include any global styles if you have
 import Link from "next/link";
+import Script from "next/script";
+
+import '../public/assets/vendor/bootstrap/css/bootstrap.min.css';
+import '../public/assets/vendor/bootstrap-icons/bootstrap-icons.css';
+import '../public/assets/vendor/aos/aos.css';
+import '../public/assets/vendor/glightbox/css/glightbox.min.css';
+import '../public/assets/vendor/swiper/swiper-bundle.min.css';
+import '../public/assets/css/main.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -12,13 +19,6 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Mentor Template</title>
-        {/* Include your CSS files */}
-        <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-        <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
-        <link href="/assets/vendor/aos/aos.css" rel="stylesheet" />
-        <link href="/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet" />
-        <link href="/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" />
-        <link href="/assets/css/main.css" rel="stylesheet" />
       </Head>
 
       <header id="header" className="header d-flex align-items-center sticky-top">
@@ -35,11 +35,11 @@ function MyApp({ Component, pageProps }: AppProps) {
       </main>
 
       {/* Include your JS files */}
-      <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-      <script src="/assets/vendor/aos/aos.js"></script>
-      <script src="/assets/vendor/glightbox/js/glightbox.min.js"></script>
-      <script src="/assets/vendor/swiper/swiper-bundle.min.js"></script>
-      <script src="/assets/js/main.js"></script>
+      <Script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js" strategy="lazyOnload"/>
+      <Script src="/assets/vendor/aos/aos.js" strategy="lazyOnload"/>
+      <Script src="/assets/vendor/glightbox/js/glightbox.min.js" strategy="lazyOnload"/>
+      <Script src="/assets/vendor/swiper/swiper-bundle.min.js" strategy="lazyOnload"/>
+      <Script src="/assets/js/main.js" strategy="lazyOnload"/>
     </SessionProvider>
   );
 }

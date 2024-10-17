@@ -1,4 +1,3 @@
-// api/validateAddress.ts
 
 export const validateAddress = async (address: string) => {
   const parisCoords = {

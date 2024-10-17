@@ -1,4 +1,3 @@
-// pages/api/saveUser.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import pool from '../../lib/db'; // Adjust the path based on your folder structure
 
