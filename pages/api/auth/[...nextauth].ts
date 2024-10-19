@@ -72,13 +72,8 @@ export default NextAuth({
       return session;
     },
     async redirect({ baseUrl }) {
-      // Redirect to the dashboard after sign-in
-      return `${baseUrl}/dashboard`; // Adjust the path if your dashboard is located elsewhere
+      return baseUrl + '/dashboard'; // Redirect to the dashboard
     },
   },
   debug: process.env.NODE_ENV === 'development',
-  // Add this line to specify NEXTAUTH_URL
-  pages: {
-    signIn: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`, // Custom sign-in page (if applicable)
-  },
 });
