@@ -15,6 +15,4 @@ declare module 'next-auth' {
   interface Session {
     user: User;
   }
-
-  console.log(NextAuth);
 }

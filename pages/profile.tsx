@@ -1,6 +1,7 @@
+// pages/profile.tsx
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link from 'next/link'; // Import Link
 
 const Profile = () => {
   const { data: session } = useSession();
@@ -16,7 +17,7 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (session) { // Check if session and user are defined
+      if (session) {
         try {
           const response = await fetch(`/api/users/${session.user.id}`, {
             headers: {
@@ -50,7 +51,7 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    if (!session || !session.user.accessToken) { // Check if session and user are defined
+    if (!session || !session.user.accessToken) {
       console.error('No access token found');
       setErrorMessage('Access token is missing.');
       return;
@@ -192,9 +193,11 @@ const Profile = () => {
             )}
           </div>
 
+          {/* Button to go back to Dashboard */}
           <Link href="/dashboard">
             <button style={styles.dashboardButton}>Go to Dashboard</button>
           </Link>
+
         </div>
       ) : (
         <p style={styles.notLoggedInText}>You are not logged in.</p>
@@ -276,10 +279,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: "4px",
     cursor: "pointer",
     border: "none",
-    marginLeft: "1rem",
+    marginLeft: "0.5rem",
   },
   logoutButton: {
-    backgroundColor: "#dc3545",
+    backgroundColor: "#ff5722",
     color: "#fff",
     padding: "0.75rem 1.5rem",
     borderRadius: "4px",
@@ -287,20 +290,19 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: "none",
   },
   dashboardButton: {
-    marginTop: "1rem",
     backgroundColor: "#0070f3",
     color: "#fff",
     padding: "0.75rem 1.5rem",
     borderRadius: "4px",
     cursor: "pointer",
     border: "none",
+    marginTop: "1rem",
   },
   notLoggedInText: {
-    color: "red",
-    fontSize: "1.2rem",
+    color: "#ff5722",
   },
   errorText: {
-    color: "red",
+    color: "#dc3545",
   },
 };
 
