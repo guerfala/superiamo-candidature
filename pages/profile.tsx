@@ -16,7 +16,7 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (session?.user) { // Check if session and user are defined
+      if (session) { // Check if session and user are defined
         try {
           const response = await fetch(`/api/users/${session.user.id}`, {
             headers: {
@@ -50,7 +50,7 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    if (!session?.user || !session.user.accessToken) { // Check if session and user are defined
+    if (!session || !session.user.accessToken) { // Check if session and user are defined
       console.error('No access token found');
       setErrorMessage('Access token is missing.');
       return;
