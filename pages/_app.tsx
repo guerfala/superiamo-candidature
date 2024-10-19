@@ -40,6 +40,12 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Script src="/assets/vendor/glightbox/js/glightbox.min.js" strategy="lazyOnload"/>
       <Script src="/assets/vendor/swiper/swiper-bundle.min.js" strategy="lazyOnload"/>
       <Script src="/assets/js/main.js" strategy="lazyOnload"/>
+      <Script src="https://cdn.jsdelivr.net/npm/@srexi/purecounterjs/dist/purecounter_vanilla.js" strategy="lazyOnload" />
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@srexi/purecounterjs/dist/purecounter_vanilla.js"
+        strategy="beforeInteractive"
+      />
+
     </SessionProvider>
   );
 }
