@@ -1,19 +1,18 @@
-// next-auth.d.ts
-import NextAuth from "next-auth";
+// types/next-auth.d.ts
+import NextAuth from 'next-auth';
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string; // Add the 'id' property
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      accessToken?: string; // If you have an access token, include it
-    };
+declare module 'next-auth' {
+  interface User {
+    email: string;
+    firstName?: string; // Optional because it may not be present
+    lastName?: string;  // Optional because it may not be present
+    dateDeNaissance?: string; // Use Date type if you want
+    adresse?: string;
+    numeroDeTelephone?: string;
+    accessToken?: string; // Add the accessToken property
   }
 
-  interface User {
-    id: string; // Ensure the User type also includes 'id'
-    // Add other custom user properties here if needed
+  interface Session {
+    user: User;
   }
 }
