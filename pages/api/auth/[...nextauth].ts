@@ -71,7 +71,7 @@ export default NextAuth({
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ baseUrl }) {
       // Redirect to the dashboard after sign-in
       return `${baseUrl}/dashboard`; // Adjust the path if your dashboard is located elsewhere
     },
