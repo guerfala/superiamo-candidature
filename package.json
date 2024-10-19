@@ -11,6 +11,7 @@
   "dependencies": {
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
+    "glightbox": "^3.3.0",
     "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "mysql2": "^3.11.3",
