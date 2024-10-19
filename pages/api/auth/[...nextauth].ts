@@ -1,16 +1,14 @@
-// pages/api/auth/[...nextauth].ts
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import pool from '../../../lib/db'; // Adjust the path based on your folder structure
-import { RowDataPacket, ResultSetHeader } from 'mysql2/promise'; // Import types correctly
+import pool from '../../../lib/db';
+import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { JWT } from 'next-auth/jwt';
 
-// Extend the JWT interface to include custom fields
 interface CustomJWT extends JWT {
-  userId?: number; // Add userId to the JWT interface
+  userId?: number;
   firstName?: string;
   lastName?: string;
-  accessToken?: string; // Add accessToken to the JWT interface
+  accessToken?: string;
 }
 
 export default NextAuth({
@@ -34,9 +32,8 @@ export default NextAuth({
         (token as CustomJWT).email = user.email || "";
       }
 
-      // Store access token when account is present (on sign-in)
       if (account) {
-        (token as CustomJWT).accessToken = account.access_token; // Save access token
+        (token as CustomJWT).accessToken = account.access_token;
       }
 
       const connection = await pool.getConnection();
@@ -44,15 +41,14 @@ export default NextAuth({
         const [rows] = await connection.query<RowDataPacket[]>('SELECT * FROM users WHERE email = ?', [token.email]);
 
         if (rows.length === 0) {
-          // Insert new user if they don't exist
           const [insertResult] = await connection.query<ResultSetHeader>(
             'INSERT INTO users (nom, prenom, email) VALUES (?, ?, ?)',
             [(token as CustomJWT).firstName, (token as CustomJWT).lastName, token.email]
           );
 
-          (token as CustomJWT).userId = insertResult.insertId; // Save new user ID
+          (token as CustomJWT).userId = insertResult.insertId;
         } else {
-          (token as CustomJWT).userId = rows[0].id; // Retrieve existing user ID
+          (token as CustomJWT).userId = rows[0].id;
         }
       } catch (error) {
         console.error('Database query error:', error);
@@ -63,18 +59,22 @@ export default NextAuth({
     },
     async session({ session, token }) {
       if (token) {
-        const customToken = token as CustomJWT; // Type assertion here
+        const customToken = token as CustomJWT;
         session.user = {
           ...session.user,
-          id: customToken.userId?.toString() || "", // Ensure userId is a string
+          id: customToken.userId?.toString() || "",
           firstName: customToken.firstName || "",
           lastName: customToken.lastName || "",
           email: customToken.email || "",
-          accessToken: customToken.accessToken || "", // Add access token to session
+          accessToken: customToken.accessToken || "",
         };
       }
       return session;
     },
   },
   debug: process.env.NODE_ENV === 'development',
+  // Add this line to specify NEXTAUTH_URL
+  pages: {
+    signIn: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`,
+  },
 });

@@ -45,6 +45,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         src="https://cdn.jsdelivr.net/npm/@srexi/purecounterjs/dist/purecounter_vanilla.js"
         strategy="beforeInteractive"
       />
+      <Script src="/assets/vendor/glightbox/js/glightbox.min.js" strategy="lazyOnload"/>
 
     </SessionProvider>
   );
