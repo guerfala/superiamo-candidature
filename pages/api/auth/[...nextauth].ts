@@ -1,16 +1,14 @@
-// pages/api/auth/[...nextauth].ts
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import pool from '../../../lib/db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { JWT } from 'next-auth/jwt';
 
-// Extend the JWT interface to include custom fields
 interface CustomJWT extends JWT {
-  userId?: number; // Add userId to the JWT interface
+  userId?: number;
   firstName?: string;
   lastName?: string;
-  accessToken?: string; // Add accessToken to the JWT interface
+  accessToken?: string;
 }
 
 export default NextAuth({
@@ -28,14 +26,14 @@ export default NextAuth({
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
-        const nameParts = user.name?.split(" ") || ["", ""]; // Split name into parts
-        (token as CustomJWT).firstName = nameParts[0] || ""; // Assign first name
-        (token as CustomJWT).lastName = nameParts.slice(1).join(" ") || ""; // Assign last name
-        (token as CustomJWT).email = user.email || ""; // Assign email
+        const nameParts = user.name?.split(" ") || ["", ""];
+        (token as CustomJWT).firstName = nameParts[0] || "";
+        (token as CustomJWT).lastName = nameParts.slice(1).join(" ") || "";
+        (token as CustomJWT).email = user.email || "";
       }
 
       if (account) {
-        (token as CustomJWT).accessToken = account.access_token; // Save access token
+        (token as CustomJWT).accessToken = account.access_token;
       }
 
       const connection = await pool.getConnection();
@@ -43,44 +41,44 @@ export default NextAuth({
         const [rows] = await connection.query<RowDataPacket[]>('SELECT * FROM users WHERE email = ?', [token.email]);
 
         if (rows.length === 0) {
-          // Insert new user if they don't exist
           const [insertResult] = await connection.query<ResultSetHeader>(
             'INSERT INTO users (nom, prenom, email) VALUES (?, ?, ?)',
             [(token as CustomJWT).firstName, (token as CustomJWT).lastName, token.email]
           );
 
-          (token as CustomJWT).userId = insertResult.insertId; // Save new user ID
+          (token as CustomJWT).userId = insertResult.insertId;
         } else {
-          (token as CustomJWT).userId = rows[0].id; // Retrieve existing user ID
+          (token as CustomJWT).userId = rows[0].id;
         }
       } catch (error) {
         console.error('Database query error:', error);
       } finally {
-        connection.release(); // Release the database connection
+        connection.release();
       }
-      return token as CustomJWT; // Return the modified token
+      return token as CustomJWT;
     },
     async session({ session, token }) {
       if (token) {
-        const customToken = token as CustomJWT; // Type assertion here
+        const customToken = token as CustomJWT;
         session.user = {
           ...session.user,
-          id: customToken.userId?.toString() || "", // Ensure userId is a string
+          id: customToken.userId?.toString() || "",
           firstName: customToken.firstName || "",
           lastName: customToken.lastName || "",
           email: customToken.email || "",
-          accessToken: customToken.accessToken || "", // Add access token to session
+          accessToken: customToken.accessToken || "",
         };
       }
-      return session; // Return the modified session
+      return session;
     },
     async redirect({ url, baseUrl }) {
-      // Prevent redirect loops
-      if (url === '/api/auth/callback/google') {
-        return baseUrl; // Redirect to the base URL to avoid loops
-      }
-      return url.startsWith(baseUrl) ? url : baseUrl; // Allow internal redirects
+      // Redirect to the dashboard after sign-in
+      return `${baseUrl}/dashboard`; // Adjust the path if your dashboard is located elsewhere
     },
   },
-  debug: process.env.NODE_ENV === 'development', // Enable debugging in development mode
+  debug: process.env.NODE_ENV === 'development',
+  // Add this line to specify NEXTAUTH_URL
+  pages: {
+    signIn: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`, // Custom sign-in page (if applicable)
+  },
 });
