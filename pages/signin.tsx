@@ -1,19 +1,23 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 const SignInPage = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
+  useEffect(() => {
+    if (session && status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [session, status, router]);
+
   const handleSignIn = () => {
-    // Redirect to the dashboard after sign in
     signIn("google", { callbackUrl: "/dashboard" });
   };
 
-  if (session) {
-    // Redirect to the dashboard if already signed in
-    router.push("/dashboard");
-    return null; // Prevent rendering the page
+  if (status === "loading") {
+    return <p>Loading...</p>; // Optional: show a loading state while checking session
   }
 
   return (
@@ -28,21 +32,20 @@ const SignInPage = () => {
   );
 };
 
-// Styles for the components
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
-    backgroundColor: "#f4f4f4", // Background color can be adjusted
+    backgroundColor: "#f4f4f4",
   },
   card: {
     padding: "2rem",
     borderRadius: "8px",
     boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
     backgroundColor: "#fff",
-    textAlign: "center" as React.CSSProperties["textAlign"], // Type assertion to satisfy TypeScript
+    textAlign: "center",
   },
   title: {
     marginBottom: "2rem",
@@ -53,7 +56,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "1rem 2rem",
     fontSize: "1rem",
     color: "#fff",
-    backgroundColor: "#4285F4", // Google sign-in button color
+    backgroundColor: "#4285F4",
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",

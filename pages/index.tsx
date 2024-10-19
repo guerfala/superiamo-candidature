@@ -7,7 +7,7 @@ const HomePage = () => {
 
   useEffect(() => {
     // Redirect to another page
-    router.push('/dashboard');
+    router.push('/signin');
   }, []);
 
   return null; // Render nothing, because we're redirecting
